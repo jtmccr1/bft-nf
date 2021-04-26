@@ -29,4 +29,6 @@ workflow preliminary_beastgen{
     take:trees_templates
 	main:
    trees_templates | beastgen_process
+   emit:
+   beastgen_process.out
 }

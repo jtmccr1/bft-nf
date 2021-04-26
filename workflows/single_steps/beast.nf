@@ -51,6 +51,9 @@ take:
     xml_seeds_ch
     main:
     preliminary_beast_process(xml_seeds_ch)
+    emit:
+        logs = preliminary_beast_process.out.logs 
+        trees = preliminary_beast_process.out.trees 
 
 }
 
@@ -60,7 +63,7 @@ workflow DTA_beast{
     main:
     DTA_beast_process(xmls_tree_seeds_ch)
     emit:
-    logs = DTA_beast_process.out.logs 
-    trees = DTA_beast_process.out.trees 
+        logs = DTA_beast_process.out.logs 
+        trees = DTA_beast_process.out.trees 
 }
 
