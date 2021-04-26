@@ -1,14 +1,6 @@
 nextflow.enable.dsl=2
 
-def get_seeds(seed,n){
-    def random= new Random(seed)
 
-    beast_seeds=[];
-    for(int i=0;i<n;i++){
-        beast_seeds.add(random.nextInt() & Integer.MAX_VALUE)
-    }
-    return beast_seeds
-}
 process preliminary_beast_process{
     tag "${key}-${seed}"
     label 'beast'
