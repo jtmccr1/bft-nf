@@ -7,6 +7,7 @@ nextflow.enable.dsl=2
 
 process tree_time{
     tag "$key"
+    stageInMode "copy"
     input:
         tuple val(key), path(tree)
     output:

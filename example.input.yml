@@ -1,0 +1,30 @@
+sequence_length: 29903
+clock_rate: 0.000075
+location: "gujarat"
+runs:
+  - key: "example"
+    tree: "ex.tree"
+    preliminary:
+    - template: "prelimnary.template"
+      seed: 0
+      n: 2
+      logs:
+      - burnin : 10000000
+        resample: 1000000
+      trees:
+      - burnin : 10000000
+        resample: 1
+    DTA:
+    - template: "DTA_template"
+      traits: "trait.file"
+      seed: 1
+      n: 2
+      logs:
+      - burnin : 10000000
+        resample: 1000000
+      trees:
+      - burnin : 10000000
+        resample: 1
+
+
+    

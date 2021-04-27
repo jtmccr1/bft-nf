@@ -57,8 +57,13 @@ workflow run_preliminary_beast{
             seed = it.preliminary.seed?:(params.preliminary.seed?:params.seed)
             n = it.preliminary.n?:(params.preliminary.n?:params.n)
             key = it.key
-           return [key,get_seeds(seed,n)]
-        })
+            //get seeds
+            def random= new Random(seed)
+            beast_seeds=[];
+            for(int i=0;i<n;i++){
+            beast_seeds.add(random.nextInt() & Integer.MAX_VALUE)
+            }
+           return [key,beast_seeds]        })
         xml_ch.join(seed_ch) | preliminary_beast 
 
 }
@@ -102,7 +107,13 @@ workflow run_DTA {
             seed = it.DTA.seed?:(params.DTA.seed?:params.seed)
             n = it.DTA.n?:(params.DTA.n?:params.n)
             key = it.key
-           return [key,get_seeds(seed,n)]
+            //get seeds
+            def random= new Random(seed)
+            beast_seeds=[];
+            for(int i=0;i<n;i++){
+            beast_seeds.add(random.nextInt() & Integer.MAX_VALUE)
+            }
+           return [key,beast_seeds]
         })
     DTA_beast(xml_ch.combine(seed_ch))
 }

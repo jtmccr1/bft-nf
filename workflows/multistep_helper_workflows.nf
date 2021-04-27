@@ -24,7 +24,13 @@ workflow testParse {
             seed = (it.DTA && it.DTA.seed)? it.DTA.seed :(params.DTA.seed?:params.seed)
             n = (it.DTA && it.DTA.n)? it.DTA.n :(params.DTA.n?:params.n)
             key = it.key;
-           return [key,get_seeds(seed,n)];
+            //get seeds
+            def random= new Random(seed)
+            beast_seeds=[];
+            for(int i=0;i<n;i++){
+            beast_seeds.add(random.nextInt() & Integer.MAX_VALUE)
+            }
+           return [key,beast_seeds]
         }).view();
 }
 
@@ -45,7 +51,13 @@ workflow post_beastgen {
             seed = (it.preliminary && it.preliminary.seed)? it.preliminary.seed:(params.preliminary.seed?:params.seed)
             n = (it.preliminary && it.preliminary.n)? it.preliminary.n:(params.preliminary.n?:params.n)
             key = it.key
-           return [key,get_seeds(seed,n)]
+            //get seeds
+            def random= new Random(seed)
+            beast_seeds=[];
+            for(int i=0;i<n;i++){
+            beast_seeds.add(random.nextInt() & Integer.MAX_VALUE)
+            }
+           return [key,beast_seeds]
         })
         xml_ch \
         | join(seed_ch) \
@@ -66,11 +78,17 @@ workflow post_prelim{
             return [key,file(traits), file(template)]
             })
         seed_ch = channel.from(params.runs).map({
-            seed = get_args(it,params,["DTA","seed"])//it.DTA.seed?:(params.DTA.seed?:params.seed)
-            n = get_args(it,params,["DTA","n"])//it.DTA.n?:(params.DTA.n?:params.n)
+            seed = (it.DTA && it.DTA.seed)? it.DTA.seed :(params.DTA.seed?:params.seed)
+            n = (it.DTA && it.DTA.n)? it.DTA.n :(params.DTA.n?:params.n)
+           
             key = it.key
-            
-           return [key,get_seeds(seed,n)]
+            //get seeds
+            def random= new Random(seed)
+            beast_seeds=[];
+            for(int i=0;i<n;i++){
+            beast_seeds.add(random.nextInt() & Integer.MAX_VALUE)
+            }
+           return [key,beast_seeds]
         })
         // pocess log and tree channels
     prelim_logs_ch = channel.from(params.runs).map({

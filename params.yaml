@@ -1,0 +1,10 @@
+testBoolean: True
+testString: "some text"
+testInteger: 42
+testList:
+- "item1"
+- "item2"
+- "item3"
+objectList:
+  - name: "Benny"
+    path: "./text.txt"

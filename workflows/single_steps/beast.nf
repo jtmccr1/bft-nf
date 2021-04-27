@@ -4,15 +4,16 @@ nextflow.enable.dsl=2
 process preliminary_beast_process{
     tag "${key}-${seed}"
     label 'beast'
+    errorStrategy 'finish'
     publishDir "${params.outDir}/preliminary/${key}", mode:"copy", overwrite:"true"
     input:
         tuple val(key), path(xml_file), val(seed)
     output:
-        tuple val(key), path("*log"), emit: logs
-        tuple val(key), path("*trees"), emit:trees
-        path("*ops")
-        path("*out")
-        path("*chkpt") optional true
+        tuple val(key), path("${seed}_${key}.log"), emit: logs
+        tuple val(key), path("${seed}_${key}.trees"), emit:trees
+        path("${seed}_${key}.ops")
+        path("${key}-${seed}.out")
+        path("${seed}_${key}.chkpt") optional true
 """
 beast  ${(params.save_every>0? "-save_every ${params.save_every} -save_state ${seed}_${key}.chkpt":'')}  -prefix ${seed}_ -seed ${seed}  ${xml_file} > ${key}-${seed}.out
 """
@@ -21,17 +22,21 @@ beast  ${(params.save_every>0? "-save_every ${params.save_every} -save_state ${s
 process DTA_beast_process{
     tag "${key}-${seed}"
     label 'beast'
-    
+    errorStrategy 'finish'
     publishDir "${params.outDir}/DTA/${key}", mode:"copy", overwrite:"true"
     input:
         tuple val(key), path(xml_file), path(trees),val(seed)
     output:
-        tuple val(key), path("*4500*log"), emit: logs
-        tuple val(key), path("*4500*trees"), emit:trees
-        path("*ops")
-        path("*out")
-        path("*log")
-        path("*chkpt") optional true
+        tuple val(key), path("${seed}_${key}.log"), emit: logs
+        tuple val(key), path("${seed}_${key}.trees"), emit:trees
+        path("${seed}_${key}.ops")
+        path("${key}-${seed}.out")
+        path("${seed}_${key}.chkpt") optional true
+        path("${seed}_${key}.full.log")
+        path("${seed}_${key}.location.rates.log")
+        path("${seed}_${key}.location.history.trees")
+        path("${seed}_${key}.complete.history.log")
+
 """
 beast  ${(params.save_every>0? "-save_every ${params.save_every} -save_state ${seed}_${key}.chkpt":'')} -beagle_scaling always -prefix ${seed}_ -seed ${seed}  ${xml_file} > ${key}-${seed}.out
 """
