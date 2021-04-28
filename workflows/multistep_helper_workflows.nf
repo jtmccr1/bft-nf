@@ -61,6 +61,7 @@ workflow post_beastgen {
         })
         xml_ch \
         | join(seed_ch) \
+        | map{ tag, xml, seeds -> tuple( groupKey(tag, seeds.size()),xml, seeds ) } \
         | transpose \
         | preliminary_beast 
         post_prelim(preliminary_beast.out.logs.groupTuple(),preliminary_beast.out.trees.groupTuple())
@@ -103,7 +104,9 @@ workflow post_prelim{
         })
 
     setupDTA(logs.join(prelim_logs_ch), trees.join(prelim_trees_ch),beastgen_ch) \
-            | join(seed_ch) |transpose \
+            | join(seed_ch) \
+            | map{ tag, xml, seeds -> tuple( groupKey(tag, seeds.size()),xml, seeds ) } \
+            | transpose \
             | DTA_beast  
 
     post_DTA(DTA_beast.out.logs.groupTuple(),DTA_beast.out.trees.groupTuple())
