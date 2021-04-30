@@ -45,11 +45,11 @@ RUN make install
 
 ###########################################################################
 # gotree just downloaded from releases - TODO grab from dockerhub image
-WORKDIR ${ROOT_HOME}
-RUN wget  --content-disposition  https://github.com/evolbioinfo/gotree/releases/download/v0.4.1/gotree_amd64_linux
-RUN mv gotree_amd64_linux gotree 
-RUN chmod +x gotree 
-RUN mv gotree ${ROOT_HOME}/exicutables
+FROM golang:1.13 as go
+WORKDIR /go/src/app
+RUN git clone --depth=1 https://github.com/evolbioinfo/gotree 
+RUN go get -d -v ./gotree
+RUN go install -v ./gotree
 
 # rust and fertree / TODO remove rust at the end
 FROM rust:1.51 as rust
@@ -75,6 +75,7 @@ COPY --from=beast /root/libs/lib/* /usr/local/lib/
 COPY --from=beast /root/libs/include/* /usr/local/include/
 COPY --from=beast /usr/local/openjdk-8 /usr/local/openjdk-8
 COPY --from=rust  /usr/local/cargo/bin/fertree /usr/local/bin/fertree
+COPY --from=go /go/bin/gotree /usr/local/bin/gotree
 #Remove python remove once we don't need treetime anymore
 
 ENV PATH /usr/local/bin:/usr/local/beast/bin:/usr/local/beastgen/bin:/usr/local/openjdk-8/bin:$PATH
