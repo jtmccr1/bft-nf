@@ -13,9 +13,9 @@ process preliminary_beast_process{
         tuple val(key), path("${seed}_${key}.trees"), emit:trees
         path("${seed}_${key}.ops")
         path("${key}-${seed}.out")
-        path("${seed}_${key}.chkpt") optional true
+        path("${seed}_${key}.chkpt") 
 """
-beast  ${(params.save_every>0? "-save_every ${params.save_every} -save_state ${seed}_${key}.chkpt":'')}  -prefix ${seed}_ -seed ${seed}  ${xml_file} > ${key}-${seed}.out
+beast   -save_every ${params.save_every} -save_state ${seed}_${key}.chkpt  -prefix ${seed}_ -seed ${seed}  ${xml_file} > ${key}-${seed}.out
 """
 }
 //TODO better passing of logs and trees to output
@@ -31,14 +31,13 @@ process DTA_beast_process{
         tuple val(key), path("${seed}_${key}.trees"), emit:trees
         path("${seed}_${key}.ops")
         path("${key}-${seed}.out")
-        path("${seed}_${key}.chkpt") optional true
         path("${seed}_${key}.full.log")
         path("${seed}_${key}.location.rates.log")
         path("${seed}_${key}.location.history.trees")
         path("${seed}_${key}.complete.history.log")
 
 """
-beast  ${(params.save_every>0? "-save_every ${params.save_every} -save_state ${seed}_${key}.chkpt":'')} -beagle_scaling always -prefix ${seed}_ -seed ${seed}  ${xml_file} > ${key}-${seed}.out
+beast   -beagle_scaling always -prefix ${seed}_ -seed ${seed}  ${xml_file} > ${key}-${seed}.out
 """
 }
 

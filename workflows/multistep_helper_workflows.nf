@@ -105,7 +105,7 @@ workflow post_prelim{
 
     setupDTA(logs.join(prelim_logs_ch), trees.join(prelim_trees_ch),beastgen_ch) \
             | join(seed_ch) \
-            | map{ tag, xml, seeds -> tuple( groupKey(tag, seeds.size()),xml, seeds ) } \
+            | map{ tag, xml, emptrees, seeds -> tuple( groupKey(tag, seeds.size()),xml, emptrees, seeds ) } \
             | transpose \
             | DTA_beast  
 
