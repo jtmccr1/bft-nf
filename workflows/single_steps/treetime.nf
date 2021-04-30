@@ -25,7 +25,7 @@ treetime --tree $tree \
     --keep-polytomies \
     --sequence-length $params.sequence_length \
     --clock-rate $params.clock_rate \
-    --clock-filter 0 \
+    --clock-filter $params.clock_filter \
     --outdir ./
 """
 
