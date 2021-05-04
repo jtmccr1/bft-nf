@@ -54,8 +54,9 @@ workflow run_preliminary_beast{
            return [key,xml]
         })
          seed_ch = channel.from(params.runs).map({
-            seed = it.preliminary.seed?:(params.preliminary.seed?:params.seed)
-            n = it.preliminary.n?:(params.preliminary.n?:params.n)
+            seed = it.seed?:params.seed
+            n = it.n?:params.n
+           
             key = it.key
             //get seeds
             def random= new Random(seed)
@@ -63,7 +64,8 @@ workflow run_preliminary_beast{
             for(int i=0;i<n;i++){
             beast_seeds.add(random.nextInt() & Integer.MAX_VALUE)
             }
-           return [key,beast_seeds]        })
+           return [key,beast_seeds]
+        })
         xml_ch.join(seed_ch) | preliminary_beast 
 
 }
