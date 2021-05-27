@@ -46,10 +46,10 @@ workflow make_preliminary_xml{
 }
 
 //TODO import run beast with all the bells and whistles 
-workflow run_preliminary_beast{
+workflow run_beast{
     main:
         xml_ch = channel.from(params.runs).map({
-            xml = it.preliminary.xml?:(params.preliminary.xml?:params.xml)
+            xml = it.xml?:params.xml
             key = it.key
            return [key,xml]
         })
@@ -66,7 +66,11 @@ workflow run_preliminary_beast{
             }
            return [key,beast_seeds]
         })
-        xml_ch.join(seed_ch) | preliminary_beast 
+        xml_ch \
+        | join(seed_ch) \
+        | map{ tag, xml, seeds -> tuple( groupKey(tag, seeds.size()),xml, seeds ) } \
+        | transpose \
+        | preliminary_beast 
 
 }
 

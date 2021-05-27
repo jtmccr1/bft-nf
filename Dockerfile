@@ -24,7 +24,8 @@ RUN mkdir -p ${ROOT_HOME}/libs
 
 # Clone and install Beast from sources
 WORKDIR ${ROOT_HOME}
-RUN git clone --depth=1 --branch v1.10.5pre_thorney_v0.1.1 https://beast-dev@github.com/beast-dev/beast-mcmc.git 
+# RUN git clone --depth=1 --branch v1.10.5pre_thorney_v0.1.1 https://beast-dev@github.com/beast-dev/beast-mcmc.git 
+RUN git clone --depth=1 --branch GMRFskyrideIntervalRefactor https://beast-dev@github.com/beast-dev/beast-mcmc.git 
 WORKDIR ${ROOT_HOME}/beast-mcmc
 RUN ant linux
 RUN mkdir -p /usr/local
@@ -40,6 +41,12 @@ RUN ./autogen.sh
 RUN ./configure --disable-sse --disable-march-native --prefix=${ROOT_HOME}/libs
 RUN make install 
 
+
+# iqtree 
+WORKDIR ${ROOT_HOME}
+RUN curl -fsSL https://github.com/iqtree/iqtree2/releases/download/v2.1.2/iqtree-2.1.2-Linux.tar.gz \
+  | tar xzvpf - --strip-components=1
+RUN mv bin/iqtree2 ${ROOT_HOME}/exicutables
 
 ## TODO does it use GPU if docker-nividiea2 is set up?
 

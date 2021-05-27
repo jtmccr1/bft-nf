@@ -1,13 +1,20 @@
 nextflow.enable.dsl=2
 
-include { prepML; input_trees; make_preliminary_xml; run_preliminary_beast; process_preliminary_runs; run_DTA } from './workflows/single_step_workflows'
+include { prepML; input_trees; make_preliminary_xml; process_preliminary_runs; run_DTA } from './workflows/single_step_workflows'
 include {post_ML_tree; post_beastgen; post_prelim; post_DTA ;testParse} from './workflows/multistep_helper_workflows'
 include {get_args;get_seeds} from "./workflows/functions"
 workflow{
 
-testParse()
-
+workflow from_alignment{
+    main:
+    fa_ch: channel.from(params.runs).map({
+        fa = (it.preliminary && it.preliminary.fa)?it.preliminary.fa:(params.preliminary.fa?:params.fa)
+        key = it.key
+        return [key,file(fa)]
+    })
+    post_alignment()
 }
+
 
 workflow from_ML_tree {
     main:
@@ -16,12 +23,7 @@ workflow from_ML_tree {
         key = it.key
         return [key,file(tree)]
     })
-    template_ch =  channel.from(params.runs).map({
-                   template = (it.preliminary && it.preliminary.template)?it.preliminary.template:params.preliminary.template?:params.template
-                    key = it.key
-                   return [key,file(template)]
-    })
-   post_ML_tree(tree_ch,template_ch)
+   post_ML_tree(tree_ch)
 }
 
 workflow from_xml {

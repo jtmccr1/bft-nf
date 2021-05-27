@@ -1,8 +1,7 @@
 nextflow.enable.dsl=2
 
-
+include { ML_tree, } from './single_steps/ML_tree'
 include { treetime } from './single_steps/treetime'
-include { prepML_tree } from './single_steps/prepML_tree'
 include {preliminary_beastgen} from './single_steps/beastgen'
 include {preliminary_beast; DTA_beast} from './single_steps/beast'
 include {setupDTA} from './single_steps/DTA_setup'
@@ -34,10 +33,33 @@ workflow testParse {
         }).view();
 }
 
+worflow post_alignment{
+    take: alignment_ch
+    main:
+   outgroup_ch =  channel.from(params.runs).map({
+                   outgroup = (it.ML && it.ML.outgroup)?it.ML.outgroup:params.ML.outgroup?:params.ML
+                   prune = (it.ML && it.ML.prune_outgroup)?it.ML.prune_outgroup:params.ML.prune_outgroup?:params.prune_outgroup
+                    key = it.key
+                   return [key,outgroup,prune]
+    })
+    nameMap_ch =  channel.from(params.runs).map({
+                   nameMap = (it.ML && it.ML.nameMap)?it.ML.nameMap:params.ML.nameMap?:params.nameMap
+                    key = it.key
+                   return [key,file(nameMap)]
+
+    ML_tree(alignment_ch,outgroup_ch,nameMap) \
+    | post_ML_tree
+}
+   
+
 workflow post_ML_tree{
     take:   tree_ch 
-            template_ch
     main:
+    template_ch =  channel.from(params.runs).map({
+                   template = (it.preliminary && it.preliminary.template)?it.preliminary.template:params.preliminary.template?:params.template
+                    key = it.key
+                   return [key,file(template)]
+    })
     treetime(tree_ch) \
     | join(template_ch) \
     | preliminary_beastgen \
