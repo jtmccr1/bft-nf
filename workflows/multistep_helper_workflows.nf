@@ -1,12 +1,13 @@
 nextflow.enable.dsl=2
 
-include { ML_tree, } from './single_steps/ML_tree'
+include { ML_tree } from './single_steps/ML_tree'
 include { treetime } from './single_steps/treetime'
 include {preliminary_beastgen} from './single_steps/beastgen'
 include {preliminary_beast; DTA_beast} from './single_steps/beast'
 include {setupDTA} from './single_steps/DTA_setup'
 include {DTA_post_processing} from './single_steps/DTA_post'
 include {get_seeds} from "./functions"
+include {align_sequences} from "./single_steps/alignment"
 
 
 
@@ -33,21 +34,44 @@ workflow testParse {
         }).view();
 }
 
-worflow post_alignment{
+workflow post_consensus {
+    take:   fa_ch
+    main:
+    sample_ch = channel.from(params.runs).map({
+        samples = (it.samples)?it.samples:params.samples;
+        key = it.key
+        return [key,file(samples)]
+    })
+    ref_ch = channel.from(params.runs).map({
+        ref = (it.reference)?it.reference:params.reference;
+        key = it.key
+        return [key,file(ref)]
+    })
+    mask_ch = channel.from(params.runs).map({
+        mask = (it.masked_sites)?it.masked_sites:params.masked_sites;
+        key = it.key
+        return [key,mask]
+    })
+    align_sequences(fa_ch,sample_ch,ref_ch,mask_ch)\
+    | post_alignment
+
+}
+
+workflow post_alignment {
     take: alignment_ch
     main:
    outgroup_ch =  channel.from(params.runs).map({
-                   outgroup = (it.ML && it.ML.outgroup)?it.ML.outgroup:params.ML.outgroup?:params.ML
-                   prune = (it.ML && it.ML.prune_outgroup)?it.ML.prune_outgroup:params.ML.prune_outgroup?:params.prune_outgroup
+                   outgroup = (it.ML && it.ML.outgroup)?it.ML.outgroup:params.outgroup
+                   prune = (it.ML && it.ML.prune_outgroup)?it.ML.prune_outgroup:params.prune_outgroup
                     key = it.key
                    return [key,outgroup,prune]
     })
     nameMap_ch =  channel.from(params.runs).map({
-                   nameMap = (it.ML && it.ML.nameMap)?it.ML.nameMap:params.ML.nameMap?:params.nameMap
+                   nameMap = (it.ML && it.ML.nameMap)?it.ML.nameMap:params.nameMap
                     key = it.key
                    return [key,file(nameMap)]
-
-    ML_tree(alignment_ch,outgroup_ch,nameMap) \
+    })
+    ML_tree(alignment_ch,outgroup_ch,nameMap_ch) \
     | post_ML_tree
 }
    
@@ -96,14 +120,15 @@ workflow post_prelim{
     main:
         beastgen_ch = channel.from(params.runs).map({
             template = (it.DTA && it.DTA.template)? it.DTA.template:(params.DTA.template?:params.template)
-            traits = (it.DTA && it.DTA.traits)?it.DTA.traits:(params.DTA.traits?:params.traits)
+            traits = (it.DTA && it.DTA.traits)?it.DTA.traits:params.traits
+            states = (it.DTA && it.DTA.states)?it.DTA.states:params.states
             key = it.key
-            return [key,file(traits), file(template)]
+            return [key,file(traits), file(template),states]
             })
         seed_ch = channel.from(params.runs).map({
             seed = (it.DTA && it.DTA.seed)? it.DTA.seed :(params.DTA.seed?:params.seed)
             n = (it.DTA && it.DTA.n)? it.DTA.n :(params.DTA.n?:params.n)
-           
+          
             key = it.key
             //get seeds
             def random= new Random(seed)

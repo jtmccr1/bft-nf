@@ -62,14 +62,14 @@ process beastgen{
     publishDir "${params.outDir}/DTA/xml", pattern: "*xml", mode:"copy", saveAs:{"${key}.DTA.xml"}
     publishDir "${params.outDir}/DTA/xml", pattern: "*trees", mode:"copy", saveAs:{"${key}.emp.trees"}
     input: 
-        tuple val(key),path(trees),path(taxa_nexus),path(traits),path(xml_template)
+        tuple val(key),path(trees),path(taxa_nexus),path(traits),path(xml_template),val(states)
     output:
         tuple val(key),path("dta.xml"),path(trees)
 
 """
 cp $xml_template ./local_template;
 beastgen -date_order -1 -date_prefix "|" -date_precision \
-    -D "outputFileStem=${key},empTreeFile=${key}.emp.trees" \
+    -D "outputFileStem=${key},empTreeFile=${key}.emp.trees,discreteStates=[${states}]" \
     -traits $traits \
     local_template \
     $taxa_nexus \

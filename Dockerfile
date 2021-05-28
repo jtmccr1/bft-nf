@@ -58,17 +58,28 @@ RUN git clone --depth=1 https://github.com/evolbioinfo/gotree
 RUN go get -d -v ./gotree
 RUN go install -v ./gotree
 
+RUN git clone --depth=1 https://github.com/cov-ert/gofasta
+RUN go get -d -v ./gofasta
+RUN go install -v ./gofasta
+
+RUN git clone --depth=1 https://github.com/evolbioinfo/goalign 
+RUN go get -d -v ./goalign
+RUN go install -v ./goalign
+
 # rust and fertree / TODO remove rust at the end
 FROM rust:1.51 as rust
 RUN git clone --depth=1 https://github.com/jtmccr1/fertree.git
 WORKDIR ${ROOT_HOME}/fertree
 RUN cargo install --path .
+RUN cargo install ripgrep
 
 # WORKDIR ${ROOT_HOME}
 # RUN git clone --depth=1  https://github.com/neherlab/treetime.git
 # WORKDIR ${ROOT_HOME}/treetime
 # RUN pip3 install .
 # RUN mv bin/treetime ${ROOT_HOME}/exicutables
+
+FROM quay.io/biocontainers/minimap2:2.20--h5bf99c6_0 as minimap2
 
 #fresh image 
 FROM python:3.7
@@ -82,7 +93,13 @@ COPY --from=beast /root/libs/lib/* /usr/local/lib/
 COPY --from=beast /root/libs/include/* /usr/local/include/
 COPY --from=beast /usr/local/openjdk-8 /usr/local/openjdk-8
 COPY --from=rust  /usr/local/cargo/bin/fertree /usr/local/bin/fertree
+COPY --from=rust  /usr/local/cargo/bin/rg /usr/local/bin/rg
 COPY --from=go /go/bin/gotree /usr/local/bin/gotree
+COPY --from=go /go/bin/gofasta /usr/local/bin/gofasta
+COPY --from=go /go/bin/goalign /usr/local/bin/goalign
+COPY --from=minimap2 /usr/local/bin/minimap2 /usr/local/bin/minimap2
+
+
 #Remove python remove once we don't need treetime anymore
 
 ENV PATH /usr/local/bin:/usr/local/beast/bin:/usr/local/beastgen/bin:/usr/local/openjdk-8/bin:$PATH

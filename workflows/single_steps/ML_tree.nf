@@ -2,14 +2,14 @@ nextflow.enable.dsl=2
 
 
 process iqtree2{
-// make and ML tree using iqtree2
     tag "$key"
+    label 'tree_building'
     input:
         tuple val(key), path(alignment)
     output:
         tuple val(key), path("tree.treefile")
 """
-iqtree2 -s alignment -m JC -nt 5 -blmin 0.00000001 --prefix tree
+iqtree2 -s $alignment $params.iqtree2_settings --prefix tree
 """
 }
 
@@ -62,7 +62,7 @@ gotree collapse length -l $params.min_bl -i $tree -o collapsed.nw
 }
 
 
-workflow prepML_tree {
+workflow ML_tree {
 	take:
 	 alignment_ch
      outgroup_ch
@@ -74,6 +74,7 @@ workflow prepML_tree {
     | join(outgroup_ch) \
     | reroot \
     | collapse \
+    | join(nameMap_ch) \
     | rename 
 
     emit: 

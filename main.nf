@@ -1,18 +1,31 @@
 nextflow.enable.dsl=2
 
 include { prepML; input_trees; make_preliminary_xml; process_preliminary_runs; run_DTA } from './workflows/single_step_workflows'
-include {post_ML_tree; post_beastgen; post_prelim; post_DTA ;testParse} from './workflows/multistep_helper_workflows'
+include {post_ML_tree; post_beastgen; post_prelim; post_DTA ;testParse; post_alignment; post_consensus} from './workflows/multistep_helper_workflows'
 include {get_args;get_seeds} from "./workflows/functions"
-workflow{
 
-workflow from_alignment{
+
+workflow from_consensus{
     main:
-    fa_ch: channel.from(params.runs).map({
-        fa = (it.preliminary && it.preliminary.fa)?it.preliminary.fa:(params.preliminary.fa?:params.fa)
+    fa_ch=channel.from(params.runs).map({
+        fa = (it.fa)?it.fa:params.fa;
         key = it.key
         return [key,file(fa)]
     })
-    post_alignment()
+
+
+    post_consensus(fa_ch)
+}
+
+workflow from_alignment{
+    main:
+    fa_ch=channel.from(params.runs).map({
+        fa = (it.ML && it.ML.fa)?it.ML.fa:params.fa;
+        key = it.key
+        return [key,file(fa)]
+    })
+
+    post_alignment(fa_ch)
 }
 
 

@@ -13,6 +13,12 @@ process tree_time{
     output:
         tuple val(key), path("timetree.nexus"), emit:timetree
         tuple val(key),path(tree), emit:og
+    script:
+if(params.clock_rate==null)
+"""
+gotree reformat nexus -i $tree -o timetree.nexus
+"""
+else
 """
 #make date file
 echo -e 'name\tdate'>dates.tsv
