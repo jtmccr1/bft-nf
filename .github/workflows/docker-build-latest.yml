@@ -1,0 +1,39 @@
+name: docker-build-latest
+# inspired by multiplatform builds in https://github.com/thedevs-network/kutt/pull/450 https://github.com/xescure/kutt/blob/75dceaeefcf934ee4200568b09f25679a7587d29/.github/workflows/docker-build-latest.yaml
+env:
+  dockerhub_repository: "jtmccr1/bft-nf"
+  dockerhub_tag: "develop"
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  dockerhub-build-push:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      -
+        name: Login to DockerHub
+        uses: docker/login-action@v1 
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      -
+        name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          push: true
+          tags: ${{ env.dockerhub_repository }}:${{ env.dockerhub_tag }}
+    
