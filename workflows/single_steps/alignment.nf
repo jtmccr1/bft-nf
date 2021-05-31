@@ -8,40 +8,45 @@ process sample_seq {
         tuple val(key), path("sampled.fa")
 
 """
- rg -A1 -f <(awk '{print \$1}' $samples) $fasta  > sampled.fa
+ rg -A1 -f <(awk '{print \$1}' $samples) $fasta | rg -v "^--\$" > sampled.fa
 """
 }
 
 process minimap2{
     tag "$key"
+    label 'concensus_processing'
     input:
         tuple val(key), path(fasta),path(reference)
     output:
         tuple val(key), path("sam.sam"), path(reference)
 """
- minimap2 -t 8 -a -x asm5 $reference $fasta > sam.sam
+ minimap2 -t 4 -a -x asm5 $reference $fasta > sam.sam
 """
 }
 
 process sam_to_fasta{
     tag "$key"
+    label 'concensus_processing'
     input:
         tuple val(key), path(sam), path(reference)
     output:
         tuple val(key), path("aligned.fa")
 """
-gofasta sam toMultiAlign -t 8 --reference $reference $sam > aligned.fa
+gofasta sam toMultiAlign -t 4 --reference $reference -s $sam --pad > aligned.fa
 """
 }
 
 process mask{
     tag "$key"
+    label 'concensus_processing'
+    publishDir "${params.outDir}/alignments", mode:"copy", overwrite:"true", saveAs:{"${key}.fa"}
+    
     input:
         tuple val(key), path(fasta), val(masked_sites)
     output:
         tuple val(key), path("masked.fa")
 """
-goalign mask -s $masked_sites -l 1 -i $fasta -o masked.fa
+goalign mask -t 4 -s $masked_sites -l 1 -i $fasta -o masked.fa
 """
 }
 

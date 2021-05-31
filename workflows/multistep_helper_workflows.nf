@@ -121,9 +121,9 @@ workflow post_prelim{
         beastgen_ch = channel.from(params.runs).map({
             template = (it.DTA && it.DTA.template)? it.DTA.template:(params.DTA.template?:params.template)
             traits = (it.DTA && it.DTA.traits)?it.DTA.traits:params.traits
-            states = (it.DTA && it.DTA.states)?it.DTA.states:params.states
+            options = (it.DTA && it.DTA.beastgenOptions)?it.DTA.beastgenOptions:params.dBeastgenOptions
             key = it.key
-            return [key,file(traits), file(template),states]
+            return [key,file(traits), file(template),options]
             })
         seed_ch = channel.from(params.runs).map({
             seed = (it.DTA && it.DTA.seed)? it.DTA.seed :(params.DTA.seed?:params.seed)
