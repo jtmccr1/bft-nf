@@ -52,8 +52,10 @@ workflow post_consensus {
         key = it.key
         return [key,mask]
     })
-    align_sequences(fa_ch,sample_ch,ref_ch,mask_ch)\
-    | post_alignment
+    align_sequences(fa_ch,sample_ch,ref_ch,mask_ch)
+    if(!params.stop_after_alignment){
+        post_alignment(align_sequences.out)
+    }
 
 }
 
@@ -71,8 +73,11 @@ workflow post_alignment {
                     key = it.key
                    return [key,file(nameMap)]
     })
-    ML_tree(alignment_ch,outgroup_ch,nameMap_ch) \
-    | post_ML_tree
+    ML_tree(alignment_ch,outgroup_ch,nameMap_ch) 
+    if(!params.stop_after_tree_building){
+         post_ML_tree(ML_tree.out)
+    }
+    
 }
    
 
@@ -86,8 +91,11 @@ workflow post_ML_tree{
     })
     treetime(tree_ch) \
     | join(template_ch) \
-    | preliminary_beastgen \
-    | post_beastgen
+    | preliminary_beastgen 
+
+    if(!params.stop_after_beastgen){
+        post_beastgen(preliminary_beastgen.out)
+    }
 }
 
 workflow post_beastgen {
@@ -110,7 +118,11 @@ workflow post_beastgen {
         | map{ tag, xml, seeds -> tuple( groupKey(tag, seeds.size()),xml, seeds ) } \
         | transpose \
         | preliminary_beast 
-        post_prelim(preliminary_beast.out.logs.groupTuple(),preliminary_beast.out.trees.groupTuple())
+
+        if(!params.stop_after_beast){
+            post_prelim(preliminary_beast.out.logs.groupTuple(),preliminary_beast.out.trees.groupTuple())
+        }
+
 }
 
 
@@ -156,7 +168,9 @@ workflow post_prelim{
             | transpose \
             | DTA_beast  
 
-    post_DTA(DTA_beast.out.logs.groupTuple(),DTA_beast.out.trees.groupTuple())
+        if(!params.stop_after_DTA){
+            post_DTA(DTA_beast.out.logs.groupTuple(),DTA_beast.out.trees.groupTuple())
+        }
 }
 workflow post_DTA{
     take:   logs
