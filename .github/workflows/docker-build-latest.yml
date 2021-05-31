@@ -2,12 +2,12 @@ name: docker-build-latest
 # inspired by multiplatform builds in https://github.com/thedevs-network/kutt/pull/450 https://github.com/xescure/kutt/blob/75dceaeefcf934ee4200568b09f25679a7587d29/.github/workflows/docker-build-latest.yaml
 env:
   dockerhub_repository: "jtmccr1/bft-nf"
-  dockerhub_tag: "develop"
+  dockerhub_tag: "latest"
 
 on:
   push:
     branches:
-      - develop
+      - dev
 
 jobs:
   dockerhub-build-push:
