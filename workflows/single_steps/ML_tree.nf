@@ -49,7 +49,6 @@ gotree rename -i $tree -m $nameMap -o renamed.nw
 
 }
 
-
 process collapse {
     tag "$key"
     input:
