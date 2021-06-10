@@ -1,0 +1,18 @@
+name: bft-nf
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - minimap2=2.20
+  - treetime=0.8.1
+  - iqtree=2.1.2
+  - gotree=0.4.1
+  - goalign=0.3.4
+  - gofasta=0.0.4
+  - python>=3.7*
+  # not included
+  #beast/beastgen
+  #fertree
+  #rustgrep
+  

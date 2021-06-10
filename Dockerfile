@@ -24,8 +24,8 @@ RUN mkdir -p ${ROOT_HOME}/libs
 
 # Clone and install Beast from sources
 WORKDIR ${ROOT_HOME}
-# RUN git clone --depth=1 --branch v1.10.5pre_thorney_v0.1.1 https://beast-dev@github.com/beast-dev/beast-mcmc.git 
-RUN git clone --depth=1 --branch GMRFskyrideIntervalRefactor https://beast-dev@github.com/beast-dev/beast-mcmc.git 
+RUN git clone --depth=1 --branch v1.10.5pre_thorney_v0.1.1 https://beast-dev@github.com/beast-dev/beast-mcmc.git 
+# RUN git clone --depth=1 --branch GMRFskyrideIntervalRefactor https://beast-dev@github.com/beast-dev/beast-mcmc.git 
 WORKDIR ${ROOT_HOME}/beast-mcmc
 RUN ant linux
 RUN mkdir -p /usr/local
@@ -79,12 +79,12 @@ RUN cargo install ripgrep
 # RUN pip3 install .
 # RUN mv bin/treetime ${ROOT_HOME}/exicutables
 
-FROM quay.io/biocontainers/minimap2:2.20--h5bf99c6_0 as minimap2
+# FROM quay.io/biocontainers/minimap2:2.20--h5bf99c6_0 as minimap2
 
 #fresh image 
 FROM python:3.7
 # RUN apt-get update && apt-get install -y extra-runtime-dependencies && rm -rf /var/lib/apt/lists/* 
-RUN git clone --depth=1  https://github.com/neherlab/treetime.git \
+RUN git clone --depth=1  --branch v0.8.1 https://github.com/neherlab/treetime.git \
 	 && cd treetime \
 	 && pip3 install . 
 COPY --from=beast /root/exicutables/* /usr/local/bin/
@@ -97,7 +97,7 @@ COPY --from=rust  /usr/local/cargo/bin/rg /usr/local/bin/rg
 COPY --from=go /go/bin/gotree /usr/local/bin/gotree
 COPY --from=go /go/bin/gofasta /usr/local/bin/gofasta
 COPY --from=go /go/bin/goalign /usr/local/bin/goalign
-COPY --from=minimap2 /usr/local/bin/minimap2 /usr/local/bin/minimap2
+# COPY --from=minimap2 /usr/local/bin/minimap2 /usr/local/bin/minimap2
 
 
 #Remove python remove once we don't need treetime anymore
