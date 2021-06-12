@@ -3,7 +3,8 @@ nextflow.enable.dsl=2
 include { prepML; input_trees; make_preliminary_xml; process_preliminary_runs; run_DTA } from './workflows/single_step_workflows'
 include {post_ML_tree; post_beastgen; post_prelim; post_DTA ;testParse; post_alignment; post_consensus} from './workflows/multistep_helper_workflows'
 include {get_args;get_seeds} from "./workflows/functions"
-
+include {process_ML_tree} from "./workflows/single_steps/ML_tree"
+include {treetime} from "./workflows/single_steps/treetime"
 
 workflow from_consensus{
     main:
@@ -27,6 +28,7 @@ workflow from_alignment{
 
     post_alignment(fa_ch)
 }
+
 
 
 workflow from_ML_tree {
@@ -85,4 +87,29 @@ workflow from_DTA {
     })
 
     post_DTA(log_ch,tree_ch)
+}
+
+
+
+workflow process_tree {
+    outgroup_ch =  channel.from(params.runs).map({
+                   outgroup = (it.ML && it.ML.outgroup)?it.ML.outgroup:params.outgroup
+                   prune = (it.ML && it.ML.prune_outgroup)?it.ML.prune_outgroup:params.prune_outgroup
+                    key = it.key
+                   return [key,outgroup,prune]
+    })
+    nameMap_ch =  channel.from(params.runs).map({
+                   nameMap = (it.ML && it.ML.nameMap)?it.ML.nameMap:params.nameMap
+                    key = it.key
+                   return [key,file(nameMap)]
+    })
+    tree_ch =  channel.from(params.runs).map({
+                   tree = (it.ML && it.ML.tree)?it.ML.tree:params.tree
+                    key = it.key
+                   return [key,file(tree)]
+    })
+
+    process_ML_tree(tree_ch,outgroup_ch,nameMap_ch) \
+    | treetime
+
 }

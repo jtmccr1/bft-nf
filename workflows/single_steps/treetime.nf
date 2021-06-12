@@ -7,7 +7,7 @@ nextflow.enable.dsl=2
 
 process tree_time{
     tag "$key"
-    stageInMode "copy"
+    stageInMode 'copy'
     publishDir "${params.outDir}/input_trees" , pattern: "outliers.txt", mode:"copy", saveAs: {"${key}.outliers.txt"}
     input:
         tuple val(key), path(tree)

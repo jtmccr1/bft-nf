@@ -1,6 +1,6 @@
 nextflow.enable.dsl=2
 
-include { ML_tree } from './single_steps/ML_tree'
+include { build_ML_tree; process_ML_tree } from './single_steps/ML_tree'
 include { treetime } from './single_steps/treetime'
 include {preliminary_beastgen} from './single_steps/beastgen'
 include {preliminary_beast; DTA_beast} from './single_steps/beast'
@@ -73,14 +73,17 @@ workflow post_alignment {
                     key = it.key
                    return [key,file(nameMap)]
     })
-    ML_tree(alignment_ch,outgroup_ch,nameMap_ch) 
-    if(!params.stop_after_tree_building){
-         post_ML_tree(ML_tree.out)
+    build_ML_tree(alignment_ch) 
+    process_ML_tree(build_ML_tree.out,outgroup_ch,nameMap_ch) 
+    if(!params.stop_after_tree_processing){
+        post_ML_tree(process_ML_tree.out)
     }
-    
 }
-   
 
+
+
+//TODO make process tree
+//TODO make this post processed tree
 workflow post_ML_tree{
     take:   tree_ch 
     main:
@@ -132,7 +135,7 @@ workflow post_prelim{
     main:
         beastgen_ch = channel.from(params.runs).map({
             template = (it.DTA && it.DTA.template)? it.DTA.template:(params.DTA.template?:params.template)
-            traits = (it.DTA && it.DTA.traits)?it.DTA.traits:params.traits
+            traits = (it.DTA && it.DTA.traits)?it.DTA.traits:(params.DTA.traits?:params.traits)
             options = (it.DTA && it.DTA.beastgenOptions)?it.DTA.beastgenOptions:params.dBeastgenOptions
             key = it.key
             return [key,file(traits), file(template),options]

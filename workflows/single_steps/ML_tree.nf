@@ -60,17 +60,14 @@ gotree collapse length -l $params.min_bl -i $tree -o collapsed.nw
 """ 
 }
 
-
-workflow ML_tree {
-	take:
-	 alignment_ch
+workflow process_ML_tree {
+    take:
+	 tree_ch
      outgroup_ch
 	 nameMap_ch
-	
-	main:
-	
-    iqtree2(alignment_ch) \
-    | join(outgroup_ch) \
+
+    main:
+    tree_ch.join(outgroup_ch) \
     | reroot \
     | collapse \
     | join(nameMap_ch) \
@@ -78,4 +75,17 @@ workflow ML_tree {
 
     emit: 
     	rename.out
+}
+
+
+workflow build_ML_tree {
+	take:
+	 alignment_ch
+	
+	main:
+	
+    iqtree2(alignment_ch) 
+
+    emit: 
+    	iqtree2.out
 }

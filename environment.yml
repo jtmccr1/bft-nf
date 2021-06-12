@@ -11,6 +11,7 @@ dependencies:
   - goalign=0.3.4
   - gofasta=0.0.4
   - python>=3.7*
+  - fasttree=2.1.10
   # not included
   #beast/beastgen
   #fertree

@@ -2,6 +2,7 @@ nextflow.enable.dsl=2
 
 
 process preliminary_beast_process{
+    stageInMode 'copy'
     tag "${key}-${seed}"
     label 'beast'
     publishDir "${params.outDir}/preliminary/${key}", mode:"copy", overwrite:"true"
@@ -21,6 +22,7 @@ beast   -save_every ${params.save_every} -save_state ${seed}_${key}.chkpt  -pref
 process DTA_beast_process{
     tag "${key}-${seed}"
     label 'beast'
+    stageInMode 'copy'
     publishDir "${params.outDir}/DTA/${key}", mode:"copy", overwrite:"true"
     input:
         tuple val(key), path(xml_file), path(trees),val(seed)

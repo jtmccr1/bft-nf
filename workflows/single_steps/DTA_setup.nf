@@ -59,6 +59,7 @@ awk  -v cutoff="$cutoff" 'NR<cutoff {print}' !{trees}  >taxa.nexus
 
 process beastgen{
     tag "${key}"
+    stageInMode "copy"
     publishDir "${params.outDir}/DTA/xml", pattern: "*xml", mode:"copy", saveAs:{"${key}.DTA.xml"}
     publishDir "${params.outDir}/DTA/xml", pattern: "*trees", mode:"copy", saveAs:{"${key}.emp.trees"}
     input: 
