@@ -2,6 +2,7 @@ name: bft-nf
 channels:
   - conda-forge
   - bioconda
+  - cov-ert
   - defaults
 dependencies:
   - minimap2=2.20
@@ -12,6 +13,13 @@ dependencies:
   - gofasta=0.0.4
   - python>=3.7*
   - fasttree=2.1.10
+  - jclusterfunk=0.0.22
+  - pip=19.3.1
+  - augur=12.0.0
+  - pip:
+    - git+https://github.com/cov-lineages/scorpio.git
+    - git+https://github.com/cov-ert/clusterfunk.git
+    - git+https://github.com/cov-lineages/constellations.git
   # not included
   #beast/beastgen
   #fertree

@@ -4,6 +4,8 @@ include { prepML; input_trees; make_preliminary_xml; process_preliminary_runs; r
 include {post_ML_tree; post_beastgen; post_prelim; post_DTA ;testParse; post_alignment; post_consensus} from './workflows/multistep_helper_workflows'
 include {get_args;get_seeds} from "./workflows/functions"
 include {process_ML_tree} from "./workflows/single_steps/ML_tree"
+include {DTA_beast_jar} from "./workflows/single_steps/beast"
+
 include {treetime} from "./workflows/single_steps/treetime"
 
 workflow from_consensus{
@@ -53,37 +55,40 @@ workflow from_xml {
 
 workflow from_preliminary{
     main:
+    println(params)
     log_ch = channel.from(params.runs).map({
         logs = (it.preliminary.logs && it.preliminary.logs.files)?it.preliminary.logs.files:(params.preliminary.logs.files?:params.files)
-        files = logs.collect({file(it)})
-        key = it.key
+        log_files = logs.collect({file(it)})
+        log_key = it.key
 
-        return [key,files]
+        return [log_key,log_files]
     })
     tree_ch = channel.from(params.runs).map({
         trees = (it.preliminary.trees && it.preliminary.trees.files)?it.preliminary.trees.files:(params.preliminary.trees.files?:params.trees)
-        files = trees.collect({file(it)})
+        tree_files = trees.collect({file(it)})
         key = it.key
-        return [key,files]
+        return [key,tree_files]
     })
     post_prelim(log_ch,tree_ch)
 }
 
 workflow from_DTA {
     main:
+    println(params)
+
     log_ch = channel.from(params.runs).map({
         logs = (it.DTA.logs && it.DTA.logs.files)?it.DTA.logs.files:(params.DTA.logs.files?:params.files)
-        files = logs.collect({file(it)})
+        log_files = logs.collect({file(it)})
       
-        key = it.key
+        log_key = it.key
 
-        return [key,files]
+        return [log_key,log_files]
     })
     tree_ch = channel.from(params.runs).map({
        trees = (it.DTA.trees && it.DTA.trees.files)?it.DTA.trees.files:(params.DTA.trees.files?:params.trees)
-        files = trees.collect({file(it)})
+        tree_files = trees.collect({file(it)})
         key = it.key
-        return [key,files]
+        return [key,tree_files]
     })
 
     post_DTA(log_ch,tree_ch)
@@ -98,10 +103,10 @@ workflow process_tree {
                     key = it.key
                    return [key,outgroup,prune]
     })
-    nameMap_ch =  channel.from(params.runs).map({
-                   nameMap = (it.ML && it.ML.nameMap)?it.ML.nameMap:params.nameMap
+    alignment_ch =  channel.from(params.runs).map({
+                   alignment = (it.ML && it.ML.alignment)?it.ML.alignment:params.alignment
                     key = it.key
-                   return [key,file(nameMap)]
+                   return [key,file(alignment)]
     })
     tree_ch =  channel.from(params.runs).map({
                    tree = (it.ML && it.ML.tree)?it.ML.tree:params.tree
@@ -109,7 +114,45 @@ workflow process_tree {
                    return [key,file(tree)]
     })
 
-    process_ML_tree(tree_ch,outgroup_ch,nameMap_ch) \
-    | treetime
+    process_ML_tree(tree_ch,outgroup_ch,alignment_ch)
+
+}
+
+
+workflow DTA {
+
+     seed_ch = channel.from(params.runs).map({
+            seed = (it.DTA && it.DTA.seed)? it.DTA.seed :(params.DTA.seed?:params.seed)
+            n = (it.DTA && it.DTA.n)? it.DTA.n :(params.DTA.n?:params.n)
+          
+            key = it.key
+            //get seeds
+            def random= new Random(seed)
+            beast_seeds=[];
+            for(int i=0;i<n;i++){
+            beast_seeds.add(random.nextInt() & Integer.MAX_VALUE)
+            }
+           return [key,beast_seeds]
+        })
+
+         xml_ch = channel.from(params.runs).map({
+            xml = (it.DTA && it.DTA.xml)? it.DTA.xml :(params.DTA.xml?:params.xml)
+          
+            key = it.key
+            //get xmls
+            
+           return [key,xml]
+        })
+        emptrees_ch = channel.from(params.runs).map({
+            emptrees = (it.DTA && it.DTA.emptrees)? it.DTA.emptrees :(params.DTA.emptrees?:params.emptrees)
+            key = it.key
+            //get xmls
+           return [key,emptrees]
+        })
+    xml_ch.join(emptrees_ch)\
+            | join(seed_ch) \
+            | map{ tag, xml, emptrees, seeds -> tuple( groupKey(tag, seeds.size()),xml, emptrees, seeds ) } \
+            | transpose \
+            | DTA_beast_jar 
 
 }

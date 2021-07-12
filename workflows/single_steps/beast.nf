@@ -28,16 +28,39 @@ process DTA_beast_process{
         tuple val(key), path(xml_file), path(trees),val(seed)
     output:
         tuple val(key), path("${seed}_${key}.log"), emit: logs
-        tuple val(key), path("${seed}_${key}.trees"), emit:trees
+        tuple val(key), path("${seed}_${key}.location.history.trees"), emit:trees
         path("${seed}_${key}.ops")
         path("${key}-${seed}.out")
-        path("${seed}_${key}.full.log")
-        path("${seed}_${key}.location.rates.log")
-        path("${seed}_${key}.location.history.trees")
+        // path("${seed}_${key}.full.log")
+        // path("${seed}_${key}.location.rates.log")
+        // path("${seed}_${key}.location.history.trees")
         path("${seed}_${key}.complete.history.log")
 
 """
 beast   -beagle_scaling always -prefix ${seed}_ -seed ${seed}  ${xml_file} > ${key}-${seed}.out
+"""
+}
+
+
+process DTA_beast_process_jar{
+    tag "${key}-${seed}"
+    label 'beast'
+    stageInMode 'copy'
+    publishDir "${params.outDir}/DTA/${key}", mode:"copy", overwrite:"true"
+    input:
+        tuple val(key), path(xml_file), path(trees),val(seed)
+    output:
+        tuple val(key), path("${seed}_${key}.log"), emit: logs
+        tuple val(key), path("${seed}_${key}.location.history.trees"), emit:trees
+        path("${seed}_${key}.ops")
+        path("${key}-${seed}.out")
+        // path("${seed}_${key}.full.log")
+        // path("${seed}_${key}.location.rates.log")
+        // path("${seed}_${key}.location.history.trees")
+        path("${seed}_${key}.complete.history.log")
+
+"""
+java  -Xms64m -Xmx4096m -jar /usr/local/lib/beast.jar  -beagle_delay_scaling_off -beagle_scaling always -prefix ${seed}_ -seed ${seed}  ${xml_file} > ${key}-${seed}.out
 """
 }
 
@@ -63,3 +86,12 @@ workflow DTA_beast{
         trees = DTA_beast_process.out.trees 
 }
 
+workflow DTA_beast_jar{
+    take:
+    xmls_tree_seeds_ch
+    main:
+    DTA_beast_process_jar(xmls_tree_seeds_ch)
+    emit:
+        logs = DTA_beast_process_jar.out.logs 
+        trees = DTA_beast_process_jar.out.trees 
+}
