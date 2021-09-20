@@ -55,12 +55,10 @@ workflow from_xml {
 
 workflow from_preliminary{
     main:
-    println(params)
     log_ch = channel.from(params.runs).map({
         logs = (it.preliminary.logs && it.preliminary.logs.files)?it.preliminary.logs.files:(params.preliminary.logs.files?:params.files)
         log_files = logs.collect({file(it)})
         log_key = it.key
-
         return [log_key,log_files]
     })
     tree_ch = channel.from(params.runs).map({
@@ -74,8 +72,6 @@ workflow from_preliminary{
 
 workflow from_DTA {
     main:
-    println(params)
-
     log_ch = channel.from(params.runs).map({
         logs = (it.DTA.logs && it.DTA.logs.files)?it.DTA.logs.files:(params.DTA.logs.files?:params.files)
         log_files = logs.collect({file(it)})

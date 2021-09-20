@@ -22,19 +22,18 @@ beast   -save_every ${params.save_every} -save_state ${seed}_${key}.chkpt  -pref
 process DTA_beast_process{
     tag "${key}-${seed}"
     label 'beast'
-    stageInMode 'copy'
     publishDir "${params.outDir}/DTA/${key}", mode:"copy", overwrite:"true"
     input:
         tuple val(key), path(xml_file), path(trees),val(seed)
     output:
         tuple val(key), path("${seed}_${key}.log"), emit: logs
-        tuple val(key), path("${seed}_${key}.location.history.trees"), emit:trees
+        tuple val(key), path("${seed}_${key}.trees"), emit:trees
         path("${seed}_${key}.ops")
         path("${key}-${seed}.out")
         // path("${seed}_${key}.full.log")
         // path("${seed}_${key}.location.rates.log")
         // path("${seed}_${key}.location.history.trees")
-        path("${seed}_${key}.complete.history.log")
+        // path("${seed}_${key}.complete.history.log")
 
 """
 beast   -beagle_scaling always -prefix ${seed}_ -seed ${seed}  ${xml_file} > ${key}-${seed}.out
@@ -45,7 +44,6 @@ beast   -beagle_scaling always -prefix ${seed}_ -seed ${seed}  ${xml_file} > ${k
 process DTA_beast_process_jar{
     tag "${key}-${seed}"
     label 'beast'
-    stageInMode 'copy'
     publishDir "${params.outDir}/DTA/${key}", mode:"copy", overwrite:"true"
     input:
         tuple val(key), path(xml_file), path(trees),val(seed)

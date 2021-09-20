@@ -1,16 +1,32 @@
 nextflow.enable.dsl=2
 
+process sample_metadata {
+    tag "$key"
+    label 'concensus_processing'
+
+    input:
+        tuple val(key), path(metadata),val(n), val(sample_options)
+    output:
+        tuple val(key), path("sampled.tsv")
+
+"""
+ sampler -i $metadata -n $n ${sample_options} > sampled.tsv
+"""
+
+}
+
+
 process sample_seq {
     tag "$key"
     label 'concensus_processing'
 
     input:
-        tuple val(key), path(fasta), path(samples)
+        tuple val(key),  path(samples), path(fasta),
     output:
         tuple val(key), path("sampled.fa")
 
 """
- rg -A1 -f <(awk '{print \$1}' $samples) $fasta | rg -v "^--\$" > sampled.fa
+ python ${workflow_dir}
 """
 }
 
@@ -54,13 +70,13 @@ goalign mask -t 3 -s $masked_sites -l 1 -i $fasta -o masked.fa
 
 workflow align_sequences {
     take:
-        fa_ch
         sample_ch
+        fa_ch
         ref_ch
         masked_ch
     main:
-        fa_ch \
-        | join(sample_ch) \
+    sample_ch \
+        | join(fa_ch) \
         | sample_seq \
         | join(ref_ch) \
         | minimap2 \

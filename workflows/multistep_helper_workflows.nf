@@ -34,14 +34,17 @@ workflow testParse {
         }).view();
 }
 
+
 workflow post_consensus {
-    take:   fa_ch
+    take:   sample_ch
     main:
-    sample_ch = channel.from(params.runs).map({
-        samples = (it.samples)?it.samples:params.samples;
-        key = it.key
-        return [key,file(samples)]
-    })
+
+    fa_ch=channel.from(params.runs).map({
+            fa = (it.fa)?it.fa:params.fa;
+            key = it.key
+            return [key,file(fa)]
+        })
+
     ref_ch = channel.from(params.runs).map({
         ref = (it.reference)?it.reference:params.reference;
         key = it.key
@@ -52,7 +55,8 @@ workflow post_consensus {
         key = it.key
         return [key,mask]
     })
-    align_sequences(fa_ch,sample_ch,ref_ch,mask_ch)
+
+    align_sequences(sample_ch,fa_ch,ref_ch,mask_ch)
     if(!params.stop_after_alignment){
         post_alignment(align_sequences.out)
     }
@@ -68,13 +72,8 @@ workflow post_alignment {
                     key = it.key
                    return [key,outgroup,prune]
     })
-    nameMap_ch =  channel.from(params.runs).map({
-                   nameMap = (it.ML && it.ML.nameMap)?it.ML.nameMap:params.nameMap
-                    key = it.key
-                   return [key,file(nameMap)]
-    })
     build_ML_tree(alignment_ch) 
-    process_ML_tree(build_ML_tree.out,outgroup_ch,nameMap_ch) 
+    process_ML_tree(build_ML_tree.out,outgroup_ch ,alignment_ch)
     if(!params.stop_after_tree_processing){
         post_ML_tree(process_ML_tree.out)
     }
@@ -88,7 +87,7 @@ workflow post_ML_tree{
     take:   tree_ch 
     main:
     template_ch =  channel.from(params.runs).map({
-                   template = (it.preliminary && it.preliminary.template)?it.preliminary.template:params.preliminary.template?:params.template
+                   template = (it.preliminary && it.preliminary.template)?it.preliminary.template:(params.preliminary&& params.preliminary.template)?params.preliminary.template:params.template
                     key = it.key
                    return [key,file(template)]
     })
@@ -105,8 +104,8 @@ workflow post_beastgen {
     take: xml_ch
         main:
         seed_ch = channel.from(params.runs).map({
-            seed = (it.preliminary && it.preliminary.seed)? it.preliminary.seed:(params.preliminary.seed?:params.seed)
-            n = (it.preliminary && it.preliminary.n)? it.preliminary.n:(params.preliminary.n?:params.n)
+            seed = (it.preliminary && it.preliminary.seed)? it.preliminary.seed:(params.preliminary && params.preliminary.seed)? params.preliminary.seed:params.seed
+            n = (it.preliminary && it.preliminary.n)? it.preliminary.n:(params.preliminary && params.preliminary.n)?params.preliminary.n:params.n
             key = it.key
             //get seeds
             def random= new Random(seed)
@@ -165,15 +164,16 @@ workflow post_prelim{
         return [it.key,burnin,resample]
         })
 
-    setupDTA(logs.join(prelim_logs_ch), trees.join(prelim_trees_ch),beastgen_ch) \
-            | join(seed_ch) \
+    setupDTA(logs.join(prelim_logs_ch), trees.join(prelim_trees_ch),beastgen_ch)
+    if(!params.stop_after_beastgen){
+            setupDTA.out | join(seed_ch) \
             | map{ tag, xml, emptrees, seeds -> tuple( groupKey(tag, seeds.size()),xml, emptrees, seeds ) } \
             | transpose \
             | DTA_beast  
-
         if(!params.stop_after_DTA){
             post_DTA(DTA_beast.out.logs.groupTuple(),DTA_beast.out.trees.groupTuple())
         }
+    }
 }
 workflow post_DTA{
     take:   logs

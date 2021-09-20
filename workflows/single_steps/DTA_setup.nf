@@ -84,15 +84,16 @@ workflow setupDTA{
         tree_ch
         beastgen_ch
     main:
-log_ch | combine_logs
+    log_ch | combine_logs
 
-tree_ch | combine_trees \
+    tree_ch | combine_trees \
         | make_taxa_nexus
-combine_trees.out.join(make_taxa_nexus.out)
+    combine_trees.out.join(make_taxa_nexus.out)
         .join(beastgen_ch) \
         | beastgen
 
-        emit:beastgen.out
+    emit:
+        beastgen.out
 }
 
 // workflow {
