@@ -30,15 +30,17 @@ logcombiner  ${(burnin>0? "-burnin ${burnin}": "")} \
 process combine_trees {
     tag "${key}"
         errorStrategy 'finish'
+    publishDir "${params.outDir}/preliminary/combined_trees", mode:"copy", overwrite:"true", saveAs:{"${key}.b${burnin/1_000_000}M.s${resample/1_000}K.trees"}
+
     input:
         tuple val(key), path(trees), val(burnin),val(resample)
     output:
-        tuple val(key), path("${key}.emp.trees")
+        tuple val(key), path("combined.trees")
 
 """
 logcombiner -trees ${(burnin>0? "-burnin ${burnin}": "")} \
             ${(resample>1? "-resample ${resample}":"")} \
-             ${trees} ${key}.emp.trees
+             ${trees} combined.trees
 """
 }
 
@@ -60,8 +62,8 @@ awk  -v cutoff="$cutoff" 'NR<cutoff {print}' !{trees}  >taxa.nexus
 process beastgen{
     tag "${key}"
     stageInMode "copy"
-    publishDir "${params.outDir}/DTA/xml", pattern: "*xml", mode:"copy", saveAs:{"${key}.DTA.xml"}
-    publishDir "${params.outDir}/DTA/xml", pattern: "*trees", mode:"copy", saveAs:{"${key}.emp.trees"}
+    publishDir "${params.outDir}/DTA/xml", pattern: "*xml",  saveAs:{"${key}.DTA.xml"}
+    publishDir "${params.outDir}/DTA/xml", pattern: "*trees",  saveAs:{"${key}.emp.trees"}
     input: 
         tuple val(key),path(trees),path(taxa_nexus),path(traits),path(xml_template),val(dBeastgenOptions)
     output:
@@ -70,7 +72,7 @@ process beastgen{
 """
 cp $xml_template ./local_template;
 beastgen -date_order -1 -date_prefix "|" -date_precision \
-    -D "outputFileStem=${key},empTreeFile=${key}.emp.trees,${dBeastgenOptions}" \
+    -D "outputFileStem=${key},empTreeFile=${trees.name},${dBeastgenOptions}" \
     -traits $traits \
     local_template \
     $taxa_nexus \
@@ -78,17 +80,28 @@ beastgen -date_order -1 -date_prefix "|" -date_precision \
 """
 }
 
-workflow setupDTA{
+workflow combine_runs {
     take:
         log_ch
         tree_ch
-        beastgen_ch
     main:
     log_ch | combine_logs
 
-    tree_ch | combine_trees \
+    tree_ch | combine_trees
+    emit:
+        combine_trees.out
+}
+
+
+workflow setupDTA{
+    take:
+        tree_ch
+        beastgen_ch
+    main:
+    tree_ch \
         | make_taxa_nexus
-    combine_trees.out.join(make_taxa_nexus.out)
+        
+   tree_ch.join(make_taxa_nexus.out)
         .join(beastgen_ch) \
         | beastgen
 

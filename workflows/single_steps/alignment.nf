@@ -57,7 +57,7 @@ gofasta sam toMultiAlign -t 3 --reference $reference -s $sam --pad > aligned.fa
 process mask{
     tag "$key"
     label 'concensus_processing'
-    publishDir "${params.outDir}/alignments", mode:"copy", overwrite:"true", saveAs:{"${key}.fa"}
+    publishDir "${params.outDir}/alignments", overwrite:"true", saveAs:{"${key}.fa"}
     
     input:
         tuple val(key), path(fasta), val(masked_sites)

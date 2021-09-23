@@ -5,7 +5,7 @@ include {post_ML_tree; post_beastgen; post_prelim; post_DTA ;testParse; post_ali
 include {get_args;get_seeds} from "./workflows/functions"
 include {process_ML_tree} from "./workflows/single_steps/ML_tree"
 include {DTA_beast_jar} from "./workflows/single_steps/beast"
-
+include {filter_fasta} from "./workflows/single_steps/filter_fasta.nf"
 include {treetime} from "./workflows/single_steps/treetime"
 
 workflow from_consensus{
@@ -15,22 +15,42 @@ workflow from_consensus{
         key = it.key
         return [key,file(fa)]
     })
-
-
     post_consensus(fa_ch)
 }
 
-workflow from_alignment{
+workflow from_alignment {
     main:
-    fa_ch=channel.from(params.runs).map({
-        fa = (it.ML && it.ML.fa)?it.ML.fa:params.fa;
-        key = it.key
-        return [key,file(fa)]
-    })
+    
+    if(!params.filter){
+        fa_ch=channel.from(params.runs).map({
+                fa = (it.ML && it.ML.fa)?it.ML.fa:params.fa;
+                key = it.key
+                return [key,file(fa)]
+            })
+            post_alignment(fa_ch)
+    }else{
 
-    post_alignment(fa_ch)
+        filter_ch = channel.from(params.runs).map({
+                fa = it.fa?it.fa:params.fa;
+                metadata = it.metadata?it.metadata:params.metadata;
+                n = (it.filter && it.filter.nseq)?it.filter.nseq:params.nseq;
+                weights = (it.filter && it.filter.weights)?it.filter.weights:params.weights;
+                key = it.key
+                return [key,file(metadata),n,weights]
+            })
+
+            fa_ch=channel.from(params.runs).map({
+                fa = (it.ML && it.ML.fa)?it.ML.fa:params.fa;
+                key = it.key
+                return [key,file(fa)]
+            })
+
+        filter_fasta(filter_ch,fa_ch)
+        post_alignment(filter_fasta.out)
+
+    }
+   
 }
-
 
 
 workflow from_ML_tree {

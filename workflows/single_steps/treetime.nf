@@ -8,7 +8,7 @@ nextflow.enable.dsl=2
 process tree_time{
     tag "$key"
     stageInMode 'copy'
-    publishDir "${params.outDir}/input_trees" , pattern: "outliers.txt", mode:"copy", saveAs: {"${key}.outliers.txt"}
+    publishDir "${params.outDir}/input_trees" , pattern: "outliers.txt", saveAs: {"${key}.outliers.txt"}
     input:
         tuple val(key), path(tree)
     output:
@@ -92,7 +92,7 @@ cat $time_tree >> combined.nw
 
 process to_nexus{
     tag "$key"
-    publishDir "${params.outDir}/input_trees" , pattern: "*nexus", mode:"copy", saveAs: {it.replaceAll("tree",key)}
+    publishDir "${params.outDir}/input_trees" , pattern: "*nexus",  saveAs: {it.replaceAll("tree",key)}
     input:
         tuple val(key),path(tree)
     output:

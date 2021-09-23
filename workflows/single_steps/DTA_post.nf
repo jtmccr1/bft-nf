@@ -15,7 +15,7 @@ def get_key_trees(path){
 
 process combine_logs{
     tag "${key}"
-    publishDir "${params.outDir}/DTA/combined_logs", mode:"copy", overwrite:"true", saveAs:{"${key}.b${burnin/1_000_000}M.s${resample/1_000}K.log"}
+    publishDir "${params.outDir}/DTA/combined_logs",  overwrite:"true", saveAs:{"${key}.b${burnin/1_000_000}M.s${resample/1_000}K.log"}
         errorStrategy 'finish'
     input:
         tuple val(key), path(logs), val(burnin) ,val(resample)
@@ -30,7 +30,7 @@ logcombiner  ${(burnin>0? "-burnin ${burnin}": "")} \
 }
 process combine_trees {
     tag "${key}"
-        publishDir "${params.outDir}/DTA/combined_trees", mode:"copy", overwrite:"true", saveAs:{"${key}.combined.trees"}
+        publishDir "${params.outDir}/DTA/combined_trees",  overwrite:"true", saveAs:{"${key}.combined.trees"}
         errorStrategy 'finish'
     input:
         tuple val(key), path(trees), val(burnin),val(resample)
@@ -46,7 +46,7 @@ logcombiner -trees ${(burnin>0? "-burnin ${burnin}": "")} \
 
 process mcc{
     tag"${key}"
-    publishDir "${params.outDir}/DTA/mcc", mode:"copy", overwrite:"true", saveAs:{"${key}.mcc.tree"}
+    publishDir "${params.outDir}/DTA/mcc",  overwrite:"true", saveAs:{"${key}.mcc.tree"}
         errorStrategy 'finish'
 
    input:

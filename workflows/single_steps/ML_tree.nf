@@ -1,6 +1,18 @@
 nextflow.enable.dsl=2
 
 
+process cat {
+     tag "$key"
+    input:
+        tuple val(key), path(alignment),path(outgroup)
+    output:
+        tuple val(key), path("all.fa")
+
+"""
+cat $alignment $outgroup > all.fa
+"""
+}
+
 process iqtree2{
     tag "$key"
     label 'tree_building'
@@ -43,7 +55,7 @@ process reroot {
 
 process rename {
     tag "$key"
-    publishDir "${params.outDir}/ML_tree" , pattern: "*nw", mode:"copy", saveAs: {"${key}.nw"}
+    publishDir "${params.outDir}/ML_tree" , pattern: "*nw", saveAs: {"${key}.nw"}
     input:
     tuple val(key), path(tree), path(nameMap)
     output:
@@ -95,7 +107,6 @@ augur refine \
             --keep-root \
             --keep-polytomies \
             --clock-rate $params.clock_rate \
-            --clock-std-dev $params.clock_stdev \
             --date-inference marginal \
             --divergence-unit mutations \
             --no-covariance \
@@ -109,7 +120,7 @@ augur refine \
 * from a refine command resolve the time tree and output as one nexus
 */
 process process_refined_tree {
-    publishDir "${params.outDir}/input_trees" , pattern: "*nexus", mode:"copy", saveAs: {it.replaceAll("scaled",key)}
+    publishDir "${params.outDir}/input_trees" , pattern: "*nexus",  saveAs: {it.replaceAll("scaled",key)}
     tag "$key"
     input:
         tuple val(key), path(refined_tree), path(node_data)
@@ -133,7 +144,7 @@ process process_refined_tree {
 */
 
 process finalize_alignment {
-     publishDir "${params.outDir}/alignment" , pattern: "*fa", mode:"copy", saveAs: {it.replaceAll("final_alignment",key)}
+     publishDir "${params.outDir}/alignment" , pattern: "*fa",  saveAs: {it.replaceAll("final_alignment",key)}
      tag "$key"
      input:
         tuple val(key), path(nexus_tree), path(alignment)
@@ -171,10 +182,12 @@ workflow process_ML_tree {
 workflow build_ML_tree {
 	take:
 	 alignment_ch
+     outgroup_ch
 	
 	main:
-	
-    iqtree2(alignment_ch) 
+	alignment_ch.join(outgroup_ch) \
+    | cat \
+    | iqtree2 
 
     emit: 
     	iqtree2.out

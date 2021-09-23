@@ -5,7 +5,7 @@ process preliminary_beast_process{
     stageInMode 'copy'
     tag "${key}-${seed}"
     label 'beast'
-    publishDir "${params.outDir}/preliminary/${key}", mode:"copy", overwrite:"true"
+    publishDir "${params.outDir}/preliminary/${key}", overwrite:"true"
     input:
         tuple val(key), path(xml_file), val(seed)
     output:
@@ -22,7 +22,7 @@ beast   -save_every ${params.save_every} -save_state ${seed}_${key}.chkpt  -pref
 process DTA_beast_process{
     tag "${key}-${seed}"
     label 'beast'
-    publishDir "${params.outDir}/DTA/${key}", mode:"copy", overwrite:"true"
+    publishDir "${params.outDir}/DTA/${key}", overwrite:"true"
     input:
         tuple val(key), path(xml_file), path(trees),val(seed)
     output:
@@ -44,7 +44,7 @@ beast   -beagle_scaling always -prefix ${seed}_ -seed ${seed}  ${xml_file} > ${k
 process DTA_beast_process_jar{
     tag "${key}-${seed}"
     label 'beast'
-    publishDir "${params.outDir}/DTA/${key}", mode:"copy", overwrite:"true"
+    publishDir "${params.outDir}/DTA/${key}", overwrite:"true"
     input:
         tuple val(key), path(xml_file), path(trees),val(seed)
     output:
