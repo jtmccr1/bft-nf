@@ -69,7 +69,10 @@ RUN go install -v ./goalign
 # rust and fertree / TODO remove rust at the end
 FROM rust:1.51 as rust
 RUN git clone --depth=1 https://github.com/jtmccr1/fertree.git
+RUN git clone --depth=1 https://github.com/jtmccr1/sampler.git
 WORKDIR ${ROOT_HOME}/fertree
+RUN cargo install --path .
+WORKDIR ${ROOT_HOME}/sampler
 RUN cargo install --path .
 RUN cargo install ripgrep
 
