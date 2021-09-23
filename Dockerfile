@@ -24,7 +24,7 @@ RUN mkdir -p ${ROOT_HOME}/libs
 
 # Clone and install Beast from sources
 WORKDIR ${ROOT_HOME}
-RUN git clone --depth=1 --branch v1.10.5pre_thorney_v0.1.1 https://beast-dev@github.com/beast-dev/beast-mcmc.git 
+RUN git clone --depth=1 --branch BigFastTreeModel https://beast-dev@github.com/beast-dev/beast-mcmc.git 
 # RUN git clone --depth=1 --branch GMRFskyrideIntervalRefactor https://beast-dev@github.com/beast-dev/beast-mcmc.git 
 WORKDIR ${ROOT_HOME}/beast-mcmc
 RUN ant linux
