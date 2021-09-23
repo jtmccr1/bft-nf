@@ -100,6 +100,8 @@ COPY --from=rust  /usr/local/cargo/bin/rg /usr/local/bin/rg
 COPY --from=go /go/bin/gotree /usr/local/bin/gotree
 COPY --from=go /go/bin/gofasta /usr/local/bin/gofasta
 COPY --from=go /go/bin/goalign /usr/local/bin/goalign
+COPY ./bin/* /usr/local/bin 
+
 # COPY --from=minimap2 /usr/local/bin/minimap2 /usr/local/bin/minimap2
 
 
