@@ -96,6 +96,7 @@ COPY --from=beast /root/libs/lib/* /usr/local/lib/
 COPY --from=beast /root/libs/include/* /usr/local/include/
 COPY --from=beast /usr/local/openjdk-8 /usr/local/openjdk-8
 COPY --from=rust  /usr/local/cargo/bin/fertree /usr/local/bin/fertree
+COPY --from=rust  /usr/local/cargo/bin/sampler /usr/local/bin/sampler
 COPY --from=rust  /usr/local/cargo/bin/rg /usr/local/bin/rg
 COPY --from=go /go/bin/gotree /usr/local/bin/gotree
 COPY --from=go /go/bin/gofasta /usr/local/bin/gofasta
