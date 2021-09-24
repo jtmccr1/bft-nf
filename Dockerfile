@@ -24,9 +24,10 @@ RUN mkdir -p ${ROOT_HOME}/libs
 
 # Clone and install Beast from sources
 WORKDIR ${ROOT_HOME}
-RUN git clone --depth=1 --branch BigFastTreeModel https://beast-dev@github.com/beast-dev/beast-mcmc.git 
+RUN git clone --branch BigFastTreeModel https://beast-dev@github.com/beast-dev/beast-mcmc.git 
 # RUN git clone --depth=1 --branch GMRFskyrideIntervalRefactor https://beast-dev@github.com/beast-dev/beast-mcmc.git 
 WORKDIR ${ROOT_HOME}/beast-mcmc
+RUN git checkout e5c6d1e
 RUN ant linux
 RUN mkdir -p /usr/local
 RUN mv ${ROOT_HOME}/beast-mcmc/release/Linux/BEASTv1* ${ROOT_HOME}/beast_builds/
@@ -54,7 +55,7 @@ RUN mv bin/iqtree2 ${ROOT_HOME}/exicutables
 # gotree just downloaded from releases - TODO grab from dockerhub image
 FROM golang:1.13 as go
 WORKDIR /go/src/app
-RUN git clone --depth=1 https://github.com/evolbioinfo/gotree 
+RUN git clone --depth=1 --branch v0.4.2 https://github.com/evolbioinfo/gotree 
 RUN go get -d -v ./gotree
 RUN go install -v ./gotree
 
@@ -62,18 +63,24 @@ RUN git clone --depth=1 https://github.com/cov-ert/gofasta
 RUN go get -d -v ./gofasta
 RUN go install -v ./gofasta
 
-RUN git clone --depth=1 https://github.com/evolbioinfo/goalign 
-RUN go get -d -v ./goalign
-RUN go install -v ./goalign
+# RUN git clone --depth=1 --branch v0.3.2 https://github.com/evolbioinfo/goalign 
+# RUN go get -d -v ./goalign
+# RUN go install -v ./goalign
 
 # rust and fertree / TODO remove rust at the end
 FROM rust:1.51 as rust
-RUN git clone --depth=1 https://github.com/jtmccr1/fertree.git
-RUN git clone --depth=1 https://github.com/jtmccr1/sampler.git
-WORKDIR ${ROOT_HOME}/fertree
+WORKDIR /root
+RUN git clone https://github.com/jtmccr1/fertree.git
+WORKDIR /root/fertree
+RUN git checkout 5c7947d
 RUN cargo install --path .
-WORKDIR ${ROOT_HOME}/sampler
+
+WORKDIR /root
+RUN git clone  https://github.com/jtmccr1/sampler.git
+WORKDIR /root/sampler
+RUN git checkout bf0a646
 RUN cargo install --path .
+
 RUN cargo install ripgrep
 
 # WORKDIR ${ROOT_HOME}
@@ -100,7 +107,7 @@ COPY --from=rust  /usr/local/cargo/bin/sampler /usr/local/bin/sampler
 COPY --from=rust  /usr/local/cargo/bin/rg /usr/local/bin/rg
 COPY --from=go /go/bin/gotree /usr/local/bin/gotree
 COPY --from=go /go/bin/gofasta /usr/local/bin/gofasta
-COPY --from=go /go/bin/goalign /usr/local/bin/goalign
+# COPY --from=go /go/bin/goalign /usr/local/bin/goalign
 COPY ./bin/* /usr/local/bin 
 
 # COPY --from=minimap2 /usr/local/bin/minimap2 /usr/local/bin/minimap2
