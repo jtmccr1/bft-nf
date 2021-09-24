@@ -68,7 +68,7 @@ workflow from_xml {
     xml_ch = channel.from(params.runs).map({
             xml = (it.preliminary && it.preliminary.xml)?it.preliminary.xml:(params.preliminary.xml?:params.xml)
             key = it.key
-           return [key,xml]
+           return [key,file(xml)]
         })
     post_beastgen(xml_ch)
 }
