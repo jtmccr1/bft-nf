@@ -179,11 +179,11 @@ workflow post_prelim{
             key = it.key
             //get seeds
             def random= new Random(seed)
-            beast_seeds=[];
+            beast_seeds_dta=[];
             for(int i=0;i<n;i++){
-            beast_seeds.add(random.nextInt() & Integer.MAX_VALUE)
+            beast_seeds_dta.add(random.nextInt() & Integer.MAX_VALUE)
             }
-           return [key,beast_seeds]
+           return [key,beast_seeds_dta]
         })
         // pocess log and tree channels
 
