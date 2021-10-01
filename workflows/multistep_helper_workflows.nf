@@ -160,6 +160,19 @@ workflow post_beastgen {
 
 }
 
+make_seed_ch = {
+seed = (it.DTA && it.DTA.seed)? it.DTA.seed :(params.DTA.seed?:params.seed)
+            n = (it.DTA && it.DTA.n)? it.DTA.n :(params.DTA.n?:params.n)
+
+            key = it.key
+            //get seeds
+            def random= new Random(seed)
+            beast_seeds_dta=[];
+            for(int i=0;i<n;i++){
+            beast_seeds_dta.add(random.nextInt() & Integer.MAX_VALUE)
+            }
+           return [key,beast_seeds_dta]
+}
 
 workflow post_prelim{
     take:  trees
@@ -171,19 +184,7 @@ workflow post_prelim{
             key = it.key
             return [key,file(traits), file(template),options]
             })
-        seed_ch = channel.from(params.runs).map({
-            seed = (it.DTA && it.DTA.seed)? it.DTA.seed :(params.DTA.seed?:params.seed)
-            n = (it.DTA && it.DTA.n)? it.DTA.n :(params.DTA.n?:params.n)
-          
-            key = it.key
-            //get seeds
-            def random= new Random(seed)
-            beast_seeds_dta=[];
-            for(int i=0;i<n;i++){
-            beast_seeds_dta.add(random.nextInt() & Integer.MAX_VALUE)
-            }
-           return [key,beast_seeds_dta]
-        })
+        seed_ch = channel.from(params.runs).map(make_seed_ch)
         // pocess log and tree channels
 
     setupDTA(trees, beastgen_ch)
