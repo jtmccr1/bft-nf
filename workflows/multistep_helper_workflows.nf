@@ -125,7 +125,6 @@ workflow post_beastgen {
            return [key,beast_seeds]
         })
 
-
         prelim_logs_ch = channel.from(params.runs).map({
         burnin = (it.preliminary && it.preliminary.logs && it.preliminary.logs.burnin)?it.preliminary.logs.burnin:
             (params.preliminary && params.preliminary.logs && params.preliminary.logs.burnin)?params.preliminary.logs.burnin:params.burnin
