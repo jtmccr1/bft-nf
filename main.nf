@@ -134,22 +134,45 @@ workflow process_tree {
 
 }
 
+workflow from_prePocessed_tree {
+    outgroup_ch =  channel.from(params.runs).map({
+                   outgroup = (it.ML && it.ML.outgroup)?it.ML.outgroup:params.outgroup
+                   prune = (it.ML && it.ML.prune_outgroup)?it.ML.prune_outgroup:params.prune_outgroup
+                    key = it.key
+                   return [key,outgroup,prune]
+    })
+    alignment_ch =  channel.from(params.runs).map({
+                   alignment = (it.ML && it.ML.alignment)?it.ML.alignment:params.alignment
+                    key = it.key
+                   return [key,file(alignment)]
+    })
+    tree_ch =  channel.from(params.runs).map({
+                   tree = (it.ML && it.ML.tree)?it.ML.tree:params.tree
+                    key = it.key
+                   return [key,file(tree)]
+    })
 
-workflow DTA {
+    process_ML_tree(tree_ch,outgroup_ch,alignment_ch);
+     post_ML_tree(process_ML_tree.out);
 
-     seed_ch = channel.from(params.runs).map({
-            seed = (it.DTA && it.DTA.seed)? it.DTA.seed :(params.DTA.seed?:params.seed)
+}
+
+make_seed_ch = {
+seed = (it.DTA && it.DTA.seed)? it.DTA.seed :(params.DTA.seed?:params.seed)
             n = (it.DTA && it.DTA.n)? it.DTA.n :(params.DTA.n?:params.n)
-          
+
             key = it.key
             //get seeds
             def random= new Random(seed)
-            beast_seeds=[];
+            beast_seeds_dta=[];
             for(int i=0;i<n;i++){
-            beast_seeds.add(random.nextInt() & Integer.MAX_VALUE)
+            beast_seeds_dta.add(random.nextInt() & Integer.MAX_VALUE)
             }
-           return [key,beast_seeds]
-        })
+           return [key,beast_seeds_dta]
+}
+workflow DTA {
+
+     seed_ch = channel.from(params.runs).map(make_seed_ch)
 
          xml_ch = channel.from(params.runs).map({
             xml = (it.DTA && it.DTA.xml)? it.DTA.xml :(params.DTA.xml?:params.xml)

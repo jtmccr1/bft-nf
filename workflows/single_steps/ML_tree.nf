@@ -36,10 +36,6 @@ process reroot {
     output:
        tuple val(key), path("rooted.nw")
     script:
-        if(outgroup==null)
-        """
-        cp $tree rooted.nwk
-        """
         if (prune)
             """ 
             gotree reroot outgroup -i $tree "$outgroup" --remove-outgroup | gotree unroot > rooted.nw
@@ -165,8 +161,14 @@ workflow process_ML_tree {
     alignment_ch
     
     main:
-    tree_ch.join(outgroup_ch) \
-    | reroot \
+    tree_ch.join(outgroup_ch).filter({it[2]!=null}) \
+    | reroot 
+
+    tree_ch
+    .join(outgroup_ch)
+    .filter({it[2]==null})
+    .map({it[0,1]})
+    .concat(reroot.out) \
     | collapse \
     | join(alignment_ch)
     | refine \

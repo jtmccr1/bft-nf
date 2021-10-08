@@ -167,11 +167,11 @@ seed = (it.DTA && it.DTA.seed)? it.DTA.seed :(params.DTA.seed?:params.seed)
             key = it.key
             //get seeds
             def random= new Random(seed)
-            beast_seeds_dta=[];
+            beast_seeds_dt2=[];
             for(int i=0;i<n;i++){
-            beast_seeds_dta.add(random.nextInt() & Integer.MAX_VALUE)
+            beast_seeds_dt2.add(random.nextInt() & Integer.MAX_VALUE)
             }
-           return [key,beast_seeds_dta]
+           return [key,beast_seeds_dt2]
 }
 
 workflow post_prelim{

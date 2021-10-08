@@ -89,10 +89,7 @@ RUN git checkout 5c7947d
 RUN cargo install --path .
 
 WORKDIR /root
-RUN git clone  https://github.com/jtmccr1/sampler.git
-WORKDIR /root/sampler
-RUN git checkout bf0a646
-RUN cargo install --path .
+RUN git clone  https://github.com/jtmccr1/sampler.git && cd  /root/sampler && git checkout afaff98 && cargo install --path .
 
 RUN cargo install ripgrep
 
@@ -110,6 +107,7 @@ FROM python:3.7
 RUN git clone --depth=1  --branch v0.8.1 https://github.com/neherlab/treetime.git \
 	 && cd treetime \
 	 && pip3 install . 
+RUN python -m pip install nextstrain-augur
 COPY --from=beast /root/beast_builds/* /usr/local/
 COPY --from=beast /root/libs/lib/* /usr/local/lib/
 COPY --from=beast /root/libs/include/* /usr/local/include/
