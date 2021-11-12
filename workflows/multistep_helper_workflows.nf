@@ -2,8 +2,8 @@ nextflow.enable.dsl=2
 
 include { build_ML_tree; process_ML_tree } from './single_steps/ML_tree'
 include { treetime } from './single_steps/treetime'
-include {DTA_beastgen} from './single_steps/beastgen'
-include {DTA_beast; DTA_beast} from './single_steps/beast'
+include {preliminary_beastgen} from './single_steps/beastgen'
+include {preliminary_beast; DTA_beast} from './single_steps/beast'
 include {setupDTA;combine_runs} from './single_steps/DTA_setup'
 include {DTA_post_processing} from './single_steps/DTA_post'
 include {get_seeds} from "./functions"
@@ -95,17 +95,17 @@ workflow post_ML_tree{
     take:   tree_ch 
     main:
     template_ch =  channel.from(params.runs).map({
-                   template = (it.DTA && it.DTA.template)?it.DTA.template:(params.DTA&& params.DTA.template)?params.DTA.template:params.template
+                   template = (it.preliminary && it.preliminary.template)?it.preliminary.template:(params.preliminary&& params.preliminary.template)?params.preliminary.template:params.template
                     key = it.key
                    return [key,file(template)]
     })
     // treetime(tree_ch) \ //TODO
     tree_ch \
     | join(template_ch) \
-    | DTA_beastgen 
+    | preliminary_beastgen 
 
     if(!params.stop_after_beastgen){
-        post_beastgen(DTA_beastgen.out)
+        post_beastgen(preliminary_beastgen.out)
     }
 }
 
@@ -113,8 +113,8 @@ workflow post_beastgen {
     take: xml_ch
         main:
         seed_ch = channel.from(params.runs).map({
-            seed = (it.DTA && it.DTA.seed)? it.DTA.seed:(params.DTA && params.DTA.seed)? params.DTA.seed:params.seed
-            n = (it.DTA && it.DTA.n)? it.DTA.n:(params.DTA && params.DTA.n)?params.DTA.n:params.n
+            seed = (it.preliminary && it.preliminary.seed)? it.preliminary.seed:(params.preliminary && params.preliminary.seed)? params.preliminary.seed:params.seed
+            n = (it.preliminary && it.preliminary.n)? it.preliminary.n:(params.preliminary && params.preliminary.n)?params.preliminary.n:params.n
             key = it.key
             //get seeds
             def random= new Random(seed)
@@ -126,32 +126,32 @@ workflow post_beastgen {
         })
 
         prelim_logs_ch = channel.from(params.runs).map({
-        burnin = (it.DTA && it.DTA.logs && it.DTA.logs.burnin)?it.DTA.logs.burnin:
-        (it.DTA && it.DTA.burnin)?it.DTA.burnin:
-            (params.DTA && params.DTA.logs && params.DTA.logs.burnin)?params.DTA.logs.burnin:
-            (params.DTA && params.DTA.burnin)?params.DTA.burnin:
+        burnin = (it.preliminary && it.preliminary.logs && it.preliminary.logs.burnin)?it.preliminary.logs.burnin:
+        (it.preliminary && it.preliminary.burnin)?it.preliminary.burnin:
+            (params.preliminary && params.preliminary.logs && params.preliminary.logs.burnin)?params.preliminary.logs.burnin:
+            (params.preliminary && params.preliminary.burnin)?params.preliminary.burnin:
             params.burnin
         
-        resample =  (it.DTA && it.DTA.logs && it.DTA.logs.resample)?it.DTA.logs.resample:
-        (it.DTA && it.DTA.resample)?it.DTA.resample:
-            (params.DTA && params.DTA.logs && params.DTA.logs.resample)?params.DTA.logs.resample:
-            (params.DTA && params.DTA.resample)?params.DTA.resample:
+        resample =  (it.preliminary && it.preliminary.logs && it.preliminary.logs.resample)?it.preliminary.logs.resample:
+        (it.preliminary && it.preliminary.resample)?it.preliminary.resample:
+            (params.preliminary && params.preliminary.logs && params.preliminary.logs.resample)?params.preliminary.logs.resample:
+            (params.preliminary && params.preliminary.resample)?params.preliminary.resample:
             params.resample
         return [it.key,burnin,resample]
         })
 
         prelim_trees_ch = channel.from(params.runs).map({
         
-        burnin = (it.DTA && it.DTA.trees && it.DTA.trees.burnin)?it.DTA.trees.burnin:
-        (it.DTA && it.DTA.burnin)?it.DTA.burnin:
-            (params.DTA && params.DTA.trees && params.DTA.trees.burnin)?params.DTA.trees.burnin:
-            (params.DTA && params.DTA.burnin)?params.DTA.burnin:
+        burnin = (it.preliminary && it.preliminary.trees && it.preliminary.trees.burnin)?it.preliminary.trees.burnin:
+        (it.preliminary && it.preliminary.burnin)?it.preliminary.burnin:
+            (params.preliminary && params.preliminary.trees && params.preliminary.trees.burnin)?params.preliminary.trees.burnin:
+            (params.preliminary && params.preliminary.burnin)?params.preliminary.burnin:
             params.burnin
         
-        resample =  (it.DTA && it.DTA.trees && it.DTA.trees.resample)?it.DTA.trees.resample:
-        (it.DTA && it.DTA.resample)?it.DTA.resample:
-            (params.DTA && params.DTA.trees && params.DTA.trees.resample)?params.DTA.trees.resample:
-            (params.DTA && params.DTA.resample)?params.DTA.resample:
+        resample =  (it.preliminary && it.preliminary.trees && it.preliminary.trees.resample)?it.preliminary.trees.resample:
+        (it.preliminary && it.preliminary.resample)?it.preliminary.resample:
+            (params.preliminary && params.preliminary.trees && params.preliminary.trees.resample)?params.preliminary.trees.resample:
+            (params.preliminary && params.preliminary.resample)?params.preliminary.resample:
             params.resample
 
         return [it.key,burnin,resample]
@@ -162,9 +162,9 @@ workflow post_beastgen {
         | join(seed_ch) \
         | map{ tag, xml, seeds -> tuple( groupKey(tag, seeds.size()),xml, seeds ) } \
         | transpose \
-        | DTA_beast 
+        | preliminary_beast 
 
-        combine_runs(DTA_beast.out.logs.groupTuple().join(prelim_logs_ch),DTA_beast.out.trees.groupTuple().join(prelim_trees_ch))
+        combine_runs(preliminary_beast.out.logs.groupTuple().join(prelim_logs_ch),preliminary_beast.out.trees.groupTuple().join(prelim_trees_ch))
 
         if(!params.stop_after_beast){
             post_prelim(combine_runs.out)
@@ -230,8 +230,6 @@ workflow post_DTA{
         return [it.key,burnin,resample]
         })
 
-        return [it.key,burnin,resample]
-        })
 
     DTA_trees_ch = channel.from(params.runs).map({
         
