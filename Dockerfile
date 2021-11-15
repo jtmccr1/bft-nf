@@ -23,45 +23,41 @@ RUN mkdir -p ${ROOT_HOME}/libs
 
 # Clone and install Beast from sources
 WORKDIR ${ROOT_HOME}
-RUN git clone --branch BigFastTreeModel https://beast-dev@github.com/beast-dev/beast-mcmc.git 
-# RUN git clone --depth=1 --branch GMRFskyrideIntervalRefactor https://beast-dev@github.com/beast-dev/beast-mcmc.git 
-WORKDIR ${ROOT_HOME}/beast-mcmc
-RUN git checkout d1a5
-# dist for the plugin below
-RUN ant linux
-RUN mkdir -p /usr/local
-RUN mv ${ROOT_HOME}/beast-mcmc/release/Linux/BEASTv1* ${ROOT_HOME}/beast_builds/BEAST 
-RUN ant -f build_beastgen.xml package
-RUN mv ${ROOT_HOME}/beast-mcmc/release_beastgen/BEASTGen*/  ${ROOT_HOME}/beast_builds/
-
-RUN ant dist
-RUN mv ${ROOT_HOME}/beast-mcmc/build ${ROOT_HOME}/beast_builds/BEAST/
+RUN git clone --branch BigFastTreeModel https://beast-dev@github.com/beast-dev/beast-mcmc.git \
+	&& cd ${ROOT_HOME}/beast-mcmc \
+	# RUN git clone --depth=1 --branch GMRFskyrideIntervalRefactor https://beast-dev@github.com/beast-dev/beast-mcmc.git 
+	&& git checkout d1a5 \
+	&&  ant linux \
+	&& mkdir -p /usr/local \
+	&& mv ${ROOT_HOME}/beast-mcmc/release/Linux/BEASTv1* ${ROOT_HOME}/beast_builds/BEAST \
+	&&  ant -f build_beastgen.xml package \
+	&& mv ${ROOT_HOME}/beast-mcmc/release_beastgen/BEASTGen*/  ${ROOT_HOME}/beast_builds/ \
+	&& ant dist \
+	&& mv ${ROOT_HOME}/beast-mcmc/build ${ROOT_HOME}/beast_builds/BEAST/
 
 WORKDIR ${ROOT_HOME}
-RUN git clone https://github.com/jtmccr1/skybricks.git
-WORKDIR ${ROOT_HOME}/skybricks
-RUN git checkout 3f1bc8f
-# overwrite properties for build against install
-RUN echo "beast.root=${ROOT_HOME}/beast_builds/BEAST" > beast_sdk.properties
-RUN ant install
+RUN git clone https://github.com/jtmccr1/skybricks.git \
+	&& cd ${ROOT_HOME}/skybricks \
+	&& git checkout 3f1bc8f \
+	# overwrite properties for build against install
+	&& echo "beast.root=${ROOT_HOME}/beast_builds/BEAST" > beast_sdk.properties \
+	&& ant install
 
 
 
 # beagle - hmc?
 WORKDIR ${ROOT_HOME}
-RUN git clone --depth=1 https://github.com/beagle-dev/beagle-lib.git
-WORKDIR ${ROOT_HOME}/beagle-lib
-RUN ./autogen.sh
-RUN ./configure --disable-sse --disable-march-native --prefix=${ROOT_HOME}/libs
-RUN make install 
+RUN git clone --depth=1  --branch v3.1.2 https://github.com/beagle-dev/beagle-lib.git \
+&& cd ${ROOT_HOME}/beagle-lib \
+&& ./autogen.sh \
+&& ./configure --disable-sse --disable-march-native --prefix=${ROOT_HOME}/libs \
+&& make install 
 
 
 # iqtree 
 WORKDIR ${ROOT_HOME}
 RUN curl -fsSL https://github.com/iqtree/iqtree2/releases/download/v2.1.2/iqtree-2.1.2-Linux.tar.gz \
-  | tar xzvpf - --strip-components=1
-RUN mv bin/iqtree2 ${ROOT_HOME}/exicutables
-
+  | tar xzvpf - --strip-components=1 
 ## TODO does it use GPU if docker-nividiea2 is set up?
 
 ###########################################################################
@@ -112,6 +108,7 @@ COPY --from=beast /root/beast_builds/* /usr/local/
 COPY --from=beast /root/libs/lib/* /usr/local/lib/
 COPY --from=beast /root/libs/include/* /usr/local/include/
 COPY --from=beast /usr/local/openjdk-8 /usr/local/openjdk-8
+COPY --from=beast /root/bin/iqtree2 /usr/local/bin/
 COPY --from=rust  /usr/local/cargo/bin/fertree /usr/local/bin/fertree
 COPY --from=rust  /usr/local/cargo/bin/sampler /usr/local/bin/sampler
 COPY --from=rust  /usr/local/cargo/bin/rg /usr/local/bin/rg
