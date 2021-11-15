@@ -8,7 +8,8 @@ RUN apt-get update && apt-get install -y \
 	autoconf \
 	automake \
 	libtool \
-	subversion 
+	subversion \
+	jq
 
 # Clean-up
 RUN apt-get -y autoremove
@@ -109,6 +110,7 @@ COPY --from=beast /root/libs/lib/* /usr/local/lib/
 COPY --from=beast /root/libs/include/* /usr/local/include/
 COPY --from=beast /usr/local/openjdk-8 /usr/local/openjdk-8
 COPY --from=beast /root/bin/iqtree2 /usr/local/bin/
+COPY --from=beast /usr/bin/jq /usr/local/bin/
 COPY --from=rust  /usr/local/cargo/bin/fertree /usr/local/bin/fertree
 COPY --from=rust  /usr/local/cargo/bin/sampler /usr/local/bin/sampler
 COPY --from=rust  /usr/local/cargo/bin/rg /usr/local/bin/rg
