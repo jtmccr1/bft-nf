@@ -8,8 +8,7 @@ RUN apt-get update && apt-get install -y \
 	autoconf \
 	automake \
 	libtool \
-	subversion \
-	jq
+	subversion 
 
 # Clean-up
 RUN apt-get -y autoremove
@@ -105,19 +104,21 @@ RUN git clone --depth=1  --branch v0.8.1 https://github.com/neherlab/treetime.gi
 	 && cd treetime \
 	 && pip3 install . 
 RUN python -m pip install nextstrain-augur
+
+RUN apt-get update && apt-get install -y jq
+
 COPY --from=beast /root/beast_builds/* /usr/local/
 COPY --from=beast /root/libs/lib/* /usr/local/lib/
 COPY --from=beast /root/libs/include/* /usr/local/include/
 COPY --from=beast /usr/local/openjdk-8 /usr/local/openjdk-8
 COPY --from=beast /root/bin/iqtree2 /usr/local/bin/
-COPY --from=beast /usr/bin/jq /usr/local/bin/
 COPY --from=rust  /usr/local/cargo/bin/fertree /usr/local/bin/fertree
 COPY --from=rust  /usr/local/cargo/bin/sampler /usr/local/bin/sampler
 COPY --from=rust  /usr/local/cargo/bin/rg /usr/local/bin/rg
 COPY --from=go /go/bin/gotree /usr/local/bin/gotree
 COPY --from=go /go/bin/gofasta /usr/local/bin/gofasta
 # COPY --from=go /go/bin/goalign /usr/local/bin/goalign
- COPY ./bin2/*py /usr/local/bin 
+COPY ./bin2/*py /usr/local/bin 
 
 # COPY --from=minimap2 /usr/local/bin/minimap2 /usr/local/bin/minimap2
 
